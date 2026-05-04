@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+// import { useTheme } from '../context/ThemeContext';
 
 const Login = () => {
     const { login } = useAuth();
-    const { theme } = useTheme();
+    // const { theme } = useTheme();
     const navigate = useNavigate();
 
     // Form state — stores what user types

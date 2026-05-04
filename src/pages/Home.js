@@ -17,6 +17,7 @@ const Home = () => {
     const [location, setLocation] = useState('');
 
     // Fetch jobs when component loads or filters change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         fetchJobs();
     }, [search, jobType, location]);

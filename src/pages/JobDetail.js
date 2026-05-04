@@ -22,6 +22,7 @@ const JobDetail = () => {
     const [applySuccess, setApplySuccess] = useState(false);
 
     // Fetch job details when page loads
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         fetchJob();
     }, [id]);
@@ -315,8 +316,8 @@ const JobDetail = () => {
                                     🏢 {job.employer_details?.company_name}
                                 </p>
                                 {job.employer_details?.company_website && (
-                                    
-                                       <a href={job.employer_details.company_website}
+
+                                    <a href={job.employer_details.company_website}
                                         target="_blank"
                                         rel="noreferrer"
                                         style={{ color: '#6f42c1' }}
