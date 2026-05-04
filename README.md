@@ -292,15 +292,3 @@ Email notifications are sent automatically using **Celery + Redis** in the backg
 
 ---
 
-## 👩‍💻 Author
-
-**Dhanashree Raut**
-- 🐙 GitHub: [@Dhanashree-Raut](https://github.com/Dhanashree-Raut)
-- 💼 Frontend: https://job-portal-career-stack-frontend.vercel.app
-- ⚙️ Backend: https://job-portal-careerstack-backend-production.up.railway.app/swagger/
-
----
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
