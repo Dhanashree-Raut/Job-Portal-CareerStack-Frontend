@@ -2,32 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Badge, Button, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     // State
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Track which job IDs the user has already applied to
+    const [appliedJobIds, setAppliedJobIds] = useState(new Set());
+
     // Filter state
     const [search, setSearch] = useState('');
     const [jobType, setJobType] = useState('');
     const [location, setLocation] = useState('');
 
-    // Fetch jobs when component loads or filters change
+    // Fetch jobs + applied status together whenever filters or user changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
-        fetchJobs();
-    }, [search, jobType, location]);
+        fetchAll();
+    }, [search, jobType, location, user]);
 
-    // How this works:
-    // useEffect watches [search, jobType, location]
-    // Any time these change → fetchJobs() runs again
-    // This gives us live filtering without a search button
-
-    const fetchJobs = async () => {
+    const fetchAll = async () => {
         try {
             setLoading(true);
 
@@ -37,8 +37,22 @@ const Home = () => {
             if (jobType) params.job_type = jobType;
             if (location) params.location = location;
 
-            const response = await api.get('/api/jobs/', { params });
-            setJobs(response.data);
+            // Run both requests in parallel — loader stays until BOTH finish
+            const requests = [api.get('/api/jobs/', { params })];
+            if (user?.role === 'job_seeker') {
+                requests.push(api.get('/api/jobs/my-applications/'));
+            }
+
+            const [jobsRes, appsRes] = await Promise.all(requests);
+
+            setJobs(jobsRes.data);
+
+            if (appsRes) {
+                const ids = new Set(appsRes.data.map(app => app.job));
+                setAppliedJobIds(ids);
+            } else {
+                setAppliedJobIds(new Set());
+            }
         } catch (err) {
             setError('Failed to load jobs. Please try again.');
         } finally {
@@ -196,99 +210,130 @@ const Home = () => {
                             </div>
                         ) : (
                             <Row>
-                                {jobs.map(job => (
-                                    <Col md={4} key={job.id} className="mb-4">
-                                        <Card
-                                            className="custom-card h-100"
-                                            style={{ cursor: 'pointer' }}
-                                            onClick={() => navigate(`/jobs/${job.id}`)}
-                                        >
-                                            <Card.Body className="p-4">
-                                                {/* Company & Job Type */}
-                                                <div className="d-flex justify-content-between align-items-start mb-2">
-                                                    <span style={{
-                                                        color: 'var(--text-secondary)',
-                                                        fontSize: '0.85rem'
+                                {jobs.map(job => {
+                                    const hasApplied = appliedJobIds.has(job.id);
+                                    return (
+                                        <Col md={4} key={job.id} className="mb-4">
+                                            <Card
+                                                className="custom-card h-100"
+                                                style={{ cursor: 'pointer' }}
+                                                onClick={() => navigate(`/jobs/${job.id}`)}
+                                            >
+                                                <Card.Body className="p-4">
+                                                    {/* Company & Job Type */}
+                                                    <div className="d-flex justify-content-between align-items-start mb-2">
+                                                        <span style={{
+                                                            color: 'var(--text-secondary)',
+                                                            fontSize: '0.85rem'
+                                                        }}>
+                                                            🏢 {job.employer_details?.company_name || 'Company'}
+                                                        </span>
+                                                        <div className="d-flex gap-1 flex-wrap justify-content-end">
+                                                            {/* Already Applied Badge */}
+                                                            {hasApplied && (
+                                                                <Badge
+                                                                    style={{
+                                                                        background: '#198754',
+                                                                        fontSize: '0.75rem'
+                                                                    }}
+                                                                >
+                                                                    ✅ Applied
+                                                                </Badge>
+                                                            )}
+                                                            <Badge bg={getJobTypeBadge(job.job_type)}>
+                                                                {formatJobType(job.job_type)}
+                                                            </Badge>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Job Title */}
+                                                    <h5 style={{
+                                                        color: 'var(--text-primary)',
+                                                        fontWeight: 'bold',
+                                                        marginBottom: '8px'
                                                     }}>
-                                                        🏢 {job.employer_details?.company_name || 'Company'}
-                                                    </span>
-                                                    <Badge bg={getJobTypeBadge(job.job_type)}>
-                                                        {formatJobType(job.job_type)}
-                                                    </Badge>
-                                                </div>
+                                                        {job.title}
+                                                    </h5>
 
-                                                {/* Job Title */}
-                                                <h5 style={{
-                                                    color: 'var(--text-primary)',
-                                                    fontWeight: 'bold',
-                                                    marginBottom: '8px'
-                                                }}>
-                                                    {job.title}
-                                                </h5>
+                                                    {/* Location */}
+                                                    <p style={{
+                                                        color: 'var(--text-secondary)',
+                                                        fontSize: '0.9rem',
+                                                        marginBottom: '8px'
+                                                    }}>
+                                                        📍 {job.location}
+                                                    </p>
 
-                                                {/* Location */}
-                                                <p style={{
-                                                    color: 'var(--text-secondary)',
-                                                    fontSize: '0.9rem',
-                                                    marginBottom: '8px'
-                                                }}>
-                                                    📍 {job.location}
-                                                </p>
+                                                    {/* Salary */}
+                                                    <p style={{
+                                                        color: '#6f42c1',
+                                                        fontWeight: 'bold',
+                                                        fontSize: '0.9rem',
+                                                        marginBottom: '12px'
+                                                    }}>
+                                                        💰 {formatSalary(job.salary_min, job.salary_max)}
+                                                    </p>
 
-                                                {/* Salary */}
-                                                <p style={{
-                                                    color: '#6f42c1',
-                                                    fontWeight: 'bold',
-                                                    fontSize: '0.9rem',
-                                                    marginBottom: '12px'
-                                                }}>
-                                                    💰 {formatSalary(job.salary_min, job.salary_max)}
-                                                </p>
+                                                    {/* Skills */}
+                                                    <div className="mb-3">
+                                                        {job.skills_required
+                                                            ?.split(',')
+                                                            .slice(0, 3)
+                                                            .map((skill, i) => (
+                                                                <Badge
+                                                                    key={i}
+                                                                    bg="light"
+                                                                    text="dark"
+                                                                    className="me-1 mb-1"
+                                                                    style={{
+                                                                        border: '1px solid var(--border-color)'
+                                                                    }}
+                                                                >
+                                                                    {skill.trim()}
+                                                                </Badge>
+                                                            ))
+                                                        }
+                                                    </div>
 
-                                                {/* Skills */}
-                                                <div className="mb-3">
-                                                    {job.skills_required
-                                                        ?.split(',')
-                                                        .slice(0, 3)
-                                                        .map((skill, i) => (
-                                                            <Badge
-                                                                key={i}
-                                                                bg="light"
-                                                                text="dark"
-                                                                className="me-1 mb-1"
+                                                    {/* Footer */}
+                                                    <div className="d-flex justify-content-between align-items-center">
+                                                        <span style={{
+                                                            color: 'var(--text-secondary)',
+                                                            fontSize: '0.8rem'
+                                                        }}>
+                                                            👥 {job.total_applications} applicants
+                                                        </span>
+                                                        {hasApplied ? (
+                                                            <Button
+                                                                size="sm"
+                                                                disabled
                                                                 style={{
-                                                                    border: '1px solid var(--border-color)'
+                                                                    background: '#198754',
+                                                                    border: 'none',
+                                                                    borderRadius: '50px',
+                                                                    opacity: 1
                                                                 }}
                                                             >
-                                                                {skill.trim()}
-                                                            </Badge>
-                                                        ))
-                                                    }
-                                                </div>
-
-                                                {/* Footer */}
-                                                <div className="d-flex justify-content-between align-items-center">
-                                                    <span style={{
-                                                        color: 'var(--text-secondary)',
-                                                        fontSize: '0.8rem'
-                                                    }}>
-                                                        👥 {job.total_applications} applicants
-                                                    </span>
-                                                    <Button
-                                                        size="sm"
-                                                        style={{
-                                                            background: 'linear-gradient(135deg, #6f42c1, #0d6efd)',
-                                                            border: 'none',
-                                                            borderRadius: '50px'
-                                                        }}
-                                                    >
-                                                        View Job →
-                                                    </Button>
-                                                </div>
-                                            </Card.Body>
-                                        </Card>
-                                    </Col>
-                                ))}
+                                                                ✅ Applied
+                                                            </Button>
+                                                        ) : (
+                                                            <Button
+                                                                size="sm"
+                                                                style={{
+                                                                    background: 'linear-gradient(135deg, #6f42c1, #0d6efd)',
+                                                                    border: 'none',
+                                                                    borderRadius: '50px'
+                                                                }}
+                                                            >
+                                                                View Job →
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </Card.Body>
+                                            </Card>
+                                        </Col>
+                                    );
+                                })}
                             </Row>
                         )}
                     </>

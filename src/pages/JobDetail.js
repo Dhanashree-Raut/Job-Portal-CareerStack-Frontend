@@ -21,17 +21,33 @@ const JobDetail = () => {
     const [applyError, setApplyError] = useState('');
     const [applySuccess, setApplySuccess] = useState(false);
 
-    // Fetch job details when page loads
+    // Track if already applied (checked from server on load)
+    const [alreadyApplied, setAlreadyApplied] = useState(false);
+
+    // Fetch job + applied status together — loader stays until BOTH finish
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
-        fetchJob();
-    }, [id]);
+        fetchAll();
+    }, [id, user]);
 
-    const fetchJob = async () => {
+    const fetchAll = async () => {
         try {
             setLoading(true);
-            const response = await api.get(`/api/jobs/${id}/`);
-            setJob(response.data);
+
+            // Run both requests in parallel
+            const requests = [api.get(`/api/jobs/${id}/`)];
+            if (user?.role === 'job_seeker') {
+                requests.push(api.get('/api/jobs/my-applications/'));
+            }
+
+            const [jobRes, appsRes] = await Promise.all(requests);
+
+            setJob(jobRes.data);
+
+            if (appsRes) {
+                const applied = appsRes.data.some(app => app.job === parseInt(id));
+                setAlreadyApplied(applied);
+            }
         } catch (err) {
             setError('Job not found or no longer available.');
         } finally {
@@ -48,6 +64,7 @@ const JobDetail = () => {
                 cover_letter: coverLetter
             });
             setApplySuccess(true);
+            setAlreadyApplied(true); // Update state immediately
             setShowModal(false);
 
         } catch (err) {
@@ -100,6 +117,9 @@ const JobDetail = () => {
         </div>
     );
 
+    // Whether to show already-applied state
+    const showAlreadyApplied = alreadyApplied || applySuccess;
+
     return (
         <div className="page-container">
             <Container className="py-4">
@@ -117,6 +137,13 @@ const JobDetail = () => {
                 {applySuccess && (
                     <Alert variant="success" className="rounded-3 mb-4">
                         🎉 Application submitted successfully! Good luck!
+                    </Alert>
+                )}
+
+                {/* Already Applied Alert — shown when user visits a job they previously applied to */}
+                {alreadyApplied && !applySuccess && (
+                    <Alert variant="info" className="rounded-3 mb-4">
+                        ✅ You have already applied to this job. We'll notify you of any updates!
                     </Alert>
                 )}
 
@@ -138,12 +165,26 @@ const JobDetail = () => {
                                             🏢 {job.employer_details?.company_name}
                                         </p>
                                     </div>
-                                    <Badge
-                                        bg="primary"
-                                        style={{ fontSize: '0.9rem', padding: '8px 12px' }}
-                                    >
-                                        {formatJobType(job.job_type)}
-                                    </Badge>
+                                    <div className="d-flex flex-column align-items-end gap-2">
+                                        <Badge
+                                            bg="primary"
+                                            style={{ fontSize: '0.9rem', padding: '8px 12px' }}
+                                        >
+                                            {formatJobType(job.job_type)}
+                                        </Badge>
+                                        {/* Applied badge next to job type */}
+                                        {showAlreadyApplied && (
+                                            <Badge
+                                                style={{
+                                                    background: '#198754',
+                                                    fontSize: '0.85rem',
+                                                    padding: '8px 12px'
+                                                }}
+                                            >
+                                                ✅ Applied
+                                            </Badge>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Quick Info */}
@@ -243,7 +284,7 @@ const JobDetail = () => {
                         <Card className="custom-card p-4 mb-4">
                             <Card.Body>
                                 <h5 style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>
-                                    Ready to Apply?
+                                    {showAlreadyApplied ? 'Application Status' : 'Ready to Apply?'}
                                 </h5>
                                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                                     👥 {job.total_applications} people have applied
@@ -271,18 +312,20 @@ const JobDetail = () => {
                                         Login to Apply
                                     </Button>
                                 ) : user.role === 'job_seeker' ? (
-                                    // Job seeker
-                                    applySuccess ? (
+                                    showAlreadyApplied ? (
+                                        // Already applied — show green disabled button
                                         <Button
                                             disabled
                                             style={{
                                                 width: '100%',
                                                 borderRadius: '50px',
                                                 background: '#198754',
-                                                border: 'none'
+                                                border: 'none',
+                                                opacity: 1,
+                                                cursor: 'default'
                                             }}
                                         >
-                                            ✅ Applied Successfully
+                                            ✅ Already Applied
                                         </Button>
                                     ) : (
                                         <Button
@@ -316,7 +359,6 @@ const JobDetail = () => {
                                     🏢 {job.employer_details?.company_name}
                                 </p>
                                 {job.employer_details?.company_website && (
-
                                     <a href={job.employer_details.company_website}
                                         target="_blank"
                                         rel="noreferrer"
