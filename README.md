@@ -1,294 +1,424 @@
-# 💼 Job Portal — CareerStack
+# CareerStack — Job Portal
 
-A full-stack Job Board application built with Django REST Framework and React. Employers can post jobs and manage applications, while Job Seekers can browse, apply, and track their application status in real time.
+A full-stack job portal built with **Django REST Framework**, **React**, and **React Native (Expo)**. The platform supports two user roles — Employers and Job Seekers — with real-time email notifications, application tracking, and a cross-platform mobile app.
 
 ---
 
-## 🌐 Live Demo
+## 🔗 Links
 
-| | Link |
+| | 🌐 Live | 📄 API Docs | 💻 GitHub |
+|---|---|---|---|
+| 🖥️ **Web Frontend** | [Live App](https://job-portal-career-stack-frontend.vercel.app) | — | [Frontend Repo](https://github.com/Dhanashree-Raut/Job-Portal-CareerStack-Frontend) |
+| ⚙️ **Backend** | [API](https://job-portal-careerstack-backend-production.up.railway.app) | [Swagger](https://job-portal-careerstack-backend-production.up.railway.app/swagger/) | [Backend Repo](https://github.com/Dhanashree-Raut/Job-Portal-CareerStack-Backend) |
+| 📱 **Mobile App** | Expo Go | — | [App Repo](https://github.com/Dhanashree-Raut/job-portal-app) |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
 |---|---|
-| 🖥️ **Frontend** | https://job-portal-career-stack-frontend.vercel.app |
-| ⚙️ **Backend API** | https://job-portal-careerstack-backend-production.up.railway.app |
-| 📄 **Swagger Docs** | https://job-portal-careerstack-backend-production.up.railway.app/swagger/ |
+| Backend language | Python 3.11+ |
+| Backend framework | Django / Django REST Framework |
+| Authentication | JWT via `djangorestframework-simplejwt` |
+| Database | PostgreSQL (Neon) |
+| Task queue | Celery + Redis |
+| Email | Gmail SMTP via Django email backend |
+| API documentation | `drf-yasg` — Swagger UI |
+| Web frontend | React 18 + React Bootstrap |
+| Mobile app | React Native + Expo (file-based routing) |
+| HTTP client | Axios |
+| Deployment | Railway (backend) · Vercel (frontend) |
 
 ---
 
-## 📂 GitHub Repositories
-
-| | Link |
-|---|---|
-| ⚛️ **Frontend Repo** | https://github.com/Dhanashree-Raut/Job-Portal-CareerStack-Frontend |
-| 🐍 **Backend Repo** | https://github.com/Dhanashree-Raut/Job-Portal-CareerStack-Backend |
-
----
-
-## 🚀 Features
-
-### 🔐 Authentication
-- JWT based authentication (Access + Refresh tokens)
-- Role based access control — Job Seeker, Employer, Admin
-- Register, Login, Logout, Change Password
-- Token auto-refresh on expiry
-
-### 👨‍💼 Job Seeker
-- Browse and search all active job listings
-- Filter by job type, location, experience level
-- Apply to jobs with a cover letter
-- Track application status in personal dashboard
-- Email notifications when status is updated by employer
-
-### 🏢 Employer
-- Post and manage job listings
-- View all applications per job
-- Update application status — Pending, Reviewed, Shortlisted, Rejected, Accepted
-- Leave notes for applicants
-- Email notifications when someone applies
-
-### 🎨 Frontend
-- Dark Mode and Light Mode toggle
-- Responsive design with Bootstrap
-- Loading skeletons and spinners
-- Role based navigation
-
----
-
-## 🛠️ Tech Stack
+## Features
 
 ### Backend
-| Technology | Purpose |
-|---|---|
-| Django 6.0 | Web framework |
-| Django REST Framework | REST API |
-| Simple JWT | Authentication |
-| PostgreSQL (Neon) | Production database |
-| Celery | Background task queue |
-| Redis Cloud | Message broker |
-| Docker + Docker Compose | Containerization |
-| Gunicorn | Production WSGI server |
-| Whitenoise | Static file serving |
-| drf-yasg | Swagger API documentation |
-| pytest-django | Unit testing |
+- JWT authentication with access and refresh tokens
+- Two-role system — Job Seeker and Employer
+- Full CRUD for job postings (employers only)
+- Job application system with cover letter support
+- Application status management — pending, reviewed, shortlisted, rejected, accepted
+- Celery-powered async email notifications for all key events
+- Company profile management per employer
+- Job filtering by type, location, experience level, and keyword search
+- Swagger UI at `/swagger/`
 
-### Frontend
-| Technology | Purpose |
-|---|---|
-| React 18 | UI framework |
-| React Router DOM | Client side routing |
-| Axios | HTTP requests + interceptors |
-| Bootstrap + React Bootstrap | Styling and components |
-| Context API | Global state (Auth + Theme) |
+### Web Frontend (React)
+- Login and registration with role selection
+- Job listing with search and filters
+- Already-applied badge on job cards and job detail page
+- Job detail page with company info and apply modal
+- Job Seeker dashboard — application tracking with status and employer notes
+- Employer dashboard — post jobs, edit jobs inline, update application status
+- Employer company profile modal — update company name, website, description
+- Dark/light theme support
 
-### Deployment & Infrastructure
-| Service | Purpose |
-|---|---|
-| Railway | Backend hosting |
-| Vercel | Frontend hosting |
-| Neon | Serverless PostgreSQL |
-| Redis Cloud | Redis broker |
-| GitHub | Version control |
+### Mobile App (React Native + Expo)
+- Cross-platform — Android and iOS
+- Login and registration with role selection
+- Job listing with search and already-applied badge
+- Job detail page with status card and employer note when already applied
+- Job Seeker dashboard — application list with status badges and employer notes
+- Employer dashboard — post jobs, edit jobs, view applications per job
+- Employer company profile edit modal
+- Auto token refresh and persistent auth via AsyncStorage
 
 ---
 
-## 📁 Project Structure
+## Email Notifications
 
-### Backend
-```
-Job-Portal-CareerStack-Backend/
-├── accounts/               # User model, auth, profiles, roles
-│   ├── models.py           # Custom User with roles
-│   ├── serializers.py      # Register, Profile, ChangePassword
-│   ├── views.py            # Register, Login, Logout, Profile
-│   ├── urls.py
-│   └── backends.py         # Email based auth backend
-├── jobs/                   # Job listings and applications
-│   ├── models.py           # Job, Application models
-│   ├── serializers.py
-│   ├── views.py            # CRUD + permissions
-│   ├── permissions.py      # IsEmployer, IsJobSeeker, IsOwner
-│   └── urls.py
-├── notifications/          # Email notifications
-│   └── tasks.py            # Celery tasks
-├── jobboard/               # Project config
-│   ├── settings.py
-│   ├── urls.py             # Swagger + API routes
-│   └── celery.py
-├── tests/                  # Unit tests
-│   ├── test_accounts.py    # 10 account tests
-│   └── test_jobs.py        # 10 job tests
-├── Dockerfile
-├── docker-compose.yml
-├── entrypoint.sh
-├── requirements.txt
-└── .env.example
-```
+| Trigger | Recipients |
+|---|---|
+| Account created | New user — welcome email with account details |
+| Job posted | Employer — job is now live confirmation |
+| Job seeker applies | Employer — new application received |
+| Job seeker applies | Job seeker — application submitted confirmation |
+| Application status updated | Job seeker — status update with employer note |
 
-### Frontend
+---
+
+## Role Permission Matrix
+
+| Action | Job Seeker | Employer |
+|---|---|---|
+| Browse jobs | ✓ | ✓ |
+| Apply to jobs | ✓ | ✗ |
+| Track own applications | ✓ | ✗ |
+| Post jobs | ✗ | ✓ |
+| Edit own jobs | ✗ | ✓ |
+| View job applications | ✗ | ✓ |
+| Update application status | ✗ | ✓ |
+| Edit company profile | ✗ | ✓ |
+
+---
+
+## Project Structure
+
 ```
-Job-Portal-CareerStack-Frontend/
-├── src/
-│   ├── api/
-│   │   └── axios.js            # Axios config + interceptors
-│   ├── context/
-│   │   ├── AuthContext.js      # Global auth state
-│   │   └── ThemeContext.js     # Dark/Light mode state
-│   ├── components/
-│   │   └── Navbar.js           # Role based navigation
-│   ├── pages/
-│   │   ├── Home.js             # Job listings + search
-│   │   ├── Login.js            # Login page
-│   │   ├── Register.js         # Register with role toggle
-│   │   ├── JobDetail.js        # Job detail + apply modal
-│   │   ├── JobSeekerDashboard.js
-│   │   └── EmployerDashboard.js
-│   ├── App.js                  # Routes + protected routes
-│   └── index.css               # CSS variables for themes
-└── .env.example
+job-portal/
+├── backend/
+│   ├── accounts/               User model, auth views, JWT
+│   │   ├── models.py           Custom User with role, company fields, skills
+│   │   ├── serializers.py
+│   │   ├── views.py            Register, Login, Logout, Profile
+│   │   └── urls.py
+│   ├── jobs/                   Job and Application logic
+│   │   ├── models.py           Job, Application models
+│   │   ├── serializers.py
+│   │   ├── views.py            CRUD + apply + status update
+│   │   ├── permissions.py      IsEmployer, IsJobSeeker
+│   │   └── urls.py
+│   ├── notifications/          Celery email tasks
+│   │   └── tasks.py            5 async email tasks
+│   ├── jobboard/               Django project config
+│   │   ├── settings.py
+│   │   ├── celery.py
+│   │   └── urls.py
+│   ├── jobs/management/
+│   │   └── commands/
+│   │       └── seed_data.py    Fake seed data command
+│   └── requirements.txt
+│
+├── frontend/                   React web app
+│   └── src/
+│       ├── api/axios.js
+│       ├── context/AuthContext.js
+│       ├── components/Navbar.js
+│       └── pages/
+│           ├── Home.js
+│           ├── JobDetail.js
+│           ├── EmployerDashboard.js
+│           ├── JobSeekerDashboard.js
+│           ├── Login.js
+│           └── Register.js
+│
+└── mobile/                     React Native Expo app
+    ├── app/
+    │   ├── (auth)/
+    │   │   ├── login.tsx
+    │   │   ├── register.tsx
+    │   │   └── _layout.tsx
+    │   ├── (tabs)/
+    │   │   ├── index.tsx        Job listing
+    │   │   ├── dashboard.tsx    Seeker + Employer dashboards
+    │   │   ├── post-job.tsx
+    │   │   └── _layout.tsx
+    │   ├── employer/
+    │   │   └── applications.tsx
+    │   └── jobs/
+    │       └── [id].tsx         Job detail
+    └── src/
+        ├── api/axios.ts
+        ├── context/AuthContext.tsx
+        └── components/JobCard.tsx
 ```
 
 ---
 
-## 🚀 Getting Started Locally
+## Data Models
+
+### User
+
+| Field | Type | Description |
+|---|---|---|
+| `email` | EmailField | Unique — used as login |
+| `username` | CharField | Display name |
+| `role` | CharField | job_seeker or employer |
+| `phone` | CharField | Optional |
+| `skills` | TextField | Job seeker skills (comma separated) |
+| `company_name` | CharField | Employer only |
+| `company_website` | URLField | Employer only |
+| `company_description` | TextField | Employer only |
+| `resume` | FileField | Job seeker only |
+| `profile_picture` | ImageField | Optional |
+
+### Job
+
+| Field | Type | Description |
+|---|---|---|
+| `employer` | ForeignKey | Linked employer user |
+| `title` | CharField | Job title |
+| `description` | TextField | Role description |
+| `requirements` | TextField | Job requirements |
+| `location` | CharField | City or Remote |
+| `salary_min` | DecimalField | Optional |
+| `salary_max` | DecimalField | Optional |
+| `job_type` | CharField | full_time / part_time / contract / internship / remote |
+| `experience_level` | CharField | entry / mid / senior |
+| `skills_required` | TextField | Comma separated |
+| `status` | CharField | active / closed / draft |
+| `deadline` | DateField | Optional application deadline |
+
+### Application
+
+| Field | Type | Description |
+|---|---|---|
+| `applicant` | ForeignKey | Job seeker user |
+| `job` | ForeignKey | Applied job |
+| `cover_letter` | TextField | Optional |
+| `resume` | FileField | Optional |
+| `status` | CharField | pending / reviewed / shortlisted / rejected / accepted |
+| `employer_note` | TextField | Optional note from employer |
+| `applied_at` | DateTimeField | Auto-set |
+
+---
+
+## API Reference
+
+### Authentication
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/accounts/register/` | Register new user |
+| POST | `/api/accounts/login/` | Get access and refresh tokens |
+| POST | `/api/accounts/logout/` | Blacklist refresh token |
+| GET / PATCH | `/api/accounts/profile/` | View or update own profile |
+| POST | `/api/accounts/token/refresh/` | Refresh access token |
+
+### Jobs
+
+| Method | Endpoint | Role | Description |
+|---|---|---|---|
+| GET | `/api/jobs/` | All | List active jobs with filters |
+| POST | `/api/jobs/` | Employer | Create a job |
+| GET | `/api/jobs/{id}/` | All | Job detail |
+| PUT | `/api/jobs/{id}/` | Employer (owner) | Edit job |
+| GET | `/api/jobs/my-jobs/` | Employer | Own job listings |
+| POST | `/api/jobs/{id}/apply/` | Job Seeker | Apply to a job |
+| GET | `/api/jobs/{id}/applications/` | Employer | Applications for a job |
+| GET | `/api/jobs/my-applications/` | Job Seeker | Own applications |
+| PUT | `/api/jobs/applications/{id}/status/` | Employer | Update application status |
+
+**Job filter params:** `?job_type=full_time&location=Mumbai&experience_level=mid&search=python`
+
+---
+
+## Setup and Installation
 
 ### Prerequisites
-- Python 3.13
+
+- Python 3.9+
 - Node.js 18+
-- Docker Desktop
+- Redis (for Celery)
+- PostgreSQL or Neon account
+
+---
 
 ### Backend Setup
 
 ```bash
-# Clone the backend repo
+# 1. Clone the repo
 git clone https://github.com/Dhanashree-Raut/Job-Portal-CareerStack-Backend.git
 cd Job-Portal-CareerStack-Backend
 
-# Copy environment file
-cp .env.example .env
-# Fill in your values in .env
-
-# Run with Docker (recommended)
-docker-compose up --build
-
-# OR run locally
+# 2. Create virtual environment
 python -m venv venv
-venv\Scripts\activate          # Windows
+venv\Scripts\activate        # Windows
+source venv/bin/activate     # Mac / Linux
+
+# 3. Install dependencies
 pip install -r requirements.txt
+
+# 4. Create .env file (see below)
+
+# 5. Run migrations
 python manage.py migrate
+
+# 6. Create superuser
+python manage.py createsuperuser
+
+# 7. Seed fake data
+python manage.py seed_data
+
+# 8. Start Django
 python manage.py runserver
+
+# 9. Start Celery worker (separate terminal)
+python -m celery -A jobboard worker --loglevel=info --pool=solo
 ```
 
-### Frontend Setup
+**.env file:**
+```
+SECRET_KEY=your-secret-key
+DEBUG=True
+DATABASE_URL=postgresql://user:password@host/dbname
+REDIS_URL=redis://localhost:6379
+EMAIL_HOST=smtp.gmail.com
+EMAIL_HOST_USER=your@gmail.com
+EMAIL_HOST_PASSWORD=your-app-password
+EMAIL_PORT=587
+DEFAULT_FROM_EMAIL=your@gmail.com
+```
+
+---
+
+### Web Frontend Setup
 
 ```bash
 # Clone the frontend repo
 git clone https://github.com/Dhanashree-Raut/Job-Portal-CareerStack-Frontend.git
 cd Job-Portal-CareerStack-Frontend
 
-# Install dependencies
 npm install
-
-# Create .env file
-echo "REACT_APP_API_URL=http://localhost:8000" > .env
-
-# Start development server
 npm start
 ```
 
----
+React app runs at `http://localhost:3000`.
 
-## 🔑 Environment Variables
-
-### Backend `.env`
-```env
-SECRET_KEY=your-django-secret-key
-DEBUG=True
-DATABASE_URL=your-neon-postgresql-url
-REDIS_URL=your-redis-cloud-url
-EMAIL_HOST_USER=your-gmail@gmail.com
-EMAIL_HOST_PASSWORD=your-gmail-app-password
+Create `frontend/.env`:
 ```
-
-### Frontend `.env`
-```env
 REACT_APP_API_URL=http://localhost:8000
-CI=false
 ```
 
 ---
 
-## 📡 API Endpoints
-
-### Accounts
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| POST | `/api/accounts/register/` | Public | Register new user |
-| POST | `/api/accounts/login/` | Public | Login and get tokens |
-| POST | `/api/accounts/logout/` | Auth | Logout and blacklist token |
-| GET/PUT | `/api/accounts/profile/` | Auth | View or update profile |
-| POST | `/api/accounts/change-password/` | Auth | Change password |
-| POST | `/api/accounts/token/refresh/` | Public | Refresh access token |
-
-### Jobs
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| GET | `/api/jobs/` | Public | List all active jobs |
-| POST | `/api/jobs/` | Employer | Create a new job |
-| GET | `/api/jobs/:id/` | Public | Job detail |
-| PUT | `/api/jobs/:id/` | Owner Employer | Update job |
-| DELETE | `/api/jobs/:id/` | Owner Employer | Delete job |
-| GET | `/api/jobs/my-jobs/` | Employer | Employer's own jobs |
-| POST | `/api/jobs/:id/apply/` | Job Seeker | Apply to a job |
-| GET | `/api/jobs/my-applications/` | Job Seeker | My applications |
-| GET | `/api/jobs/:id/applications/` | Employer | Applications for a job |
-| PUT | `/api/jobs/applications/:id/status/` | Employer | Update application status |
-
----
-
-## 🧪 Running Tests
+### Mobile App Setup
 
 ```bash
-# Run locally
-pytest tests/ -v
+# Clone the mobile repo
+git clone https://github.com/Dhanashree-Raut/job-portal-app.git
+cd job-portal-app
 
-# Run in Docker
-docker-compose run --rm web pytest tests/ -v
-
-# Run specific file
-pytest tests/test_accounts.py -v
-pytest tests/test_jobs.py -v
+npm install
+npx expo start
 ```
 
-**Test Coverage: 20/20 tests passing ✅**
+Then scan the QR code with **Expo Go** on your phone, or press:
+- `a` — Android emulator
+- `i` — iOS simulator
+- `w` — Web browser
+
+Update `baseURL` in `src/api/axios.ts`:
+```ts
+// Physical device — use your machine's local IP
+baseURL: 'http://192.168.x.x:8000'
+
+// Emulator
+baseURL: 'http://localhost:8000'
+```
 
 ---
 
-## 🐳 Docker Commands
+## Running Everything Together
 
 ```bash
-# Start all services (Django + Celery + Redis)
-docker-compose up --build
+# Terminal 1 — Django backend
+python manage.py runserver
 
-# Run in background
-docker-compose up -d
+# Terminal 2 — Celery worker
+python -m celery -A jobboard worker --loglevel=info --pool=solo
 
-# Stop all services
-docker-compose down
+# Terminal 3 — React web
+cd frontend && npm start
 
-# View logs
-docker-compose logs -f web
-
-# Run tests inside Docker
-docker-compose run --rm web pytest tests/ -v
+# Terminal 4 — Expo mobile
+cd mobile && npx expo start
 ```
 
+| Service | URL |
+|---|---|
+| Django API | http://127.0.0.1:8000/api/ |
+| Swagger UI | http://127.0.0.1:8000/swagger/ |
+| Django Admin | http://127.0.0.1:8000/admin/ |
+| React Web | http://localhost:3000 |
+| Expo Mobile | Scan QR from terminal |
+
 ---
 
-## 📬 Email Notifications
+## Seed Data Credentials
 
-Email notifications are sent automatically using **Celery + Redis** in the background:
+Run `python manage.py seed_data` to load fake employers and job seekers.
 
-- ✅ **Job Seeker applies** → Employer receives email notification
-- ✅ **Employer updates status** → Job Seeker receives email with status and note
+**All passwords:** `Test@1234`
+
+| Role | Email |
+|---|---|
+| Employer | hr@careerstackmailinfosys.com |
+| Employer | careers@careerstacktcs.com |
+| Employer | jobs@careerstackflipkart.com |
+| Employer | talent@careerstackrazorpay.com |
+| Employer | hr@careerstackzomato.com |
+| Job Seeker | arjun.sharma@careerstackmail.com |
+| Job Seeker | priya.mehta@careerstackmail.com |
+| Job Seeker | rahul.verma@careerstackmail.com |
+| Job Seeker | neha.joshi@careerstackmail.com |
+| Job Seeker | karan.patel@careerstackmail.com |
+| Job Seeker | sneha.rao@careerstackmail.com |
+| Job Seeker | amit.singh@careerstackmail.com |
+| Job Seeker | divya.kumar@careerstackmail.com |
 
 ---
 
+## Error Handling
+
+| Status | Meaning |
+|---|---|
+| `200 OK` | Success |
+| `201 Created` | Resource created |
+| `400 Bad Request` | Validation error |
+| `401 Unauthorized` | Missing or expired token |
+| `403 Forbidden` | Wrong role |
+| `404 Not Found` | Resource not found |
+
+---
+
+## Design Decisions
+
+| Area | Decision |
+|---|---|
+| Email as login | More user-friendly than username for a job portal |
+| Celery for emails | Email sending is async — API response is never blocked by SMTP |
+| Fake email domains | Seed users use `@careerstackmail.com` so no real emails are sent accidentally |
+| `DEFAULT_FROM_EMAIL` in env | Single place to change the sender email across all tasks |
+| `fail_silently=False` in tasks | Errors are logged via Celery — task retries can be added later |
+| Company info on User model | Simpler than a separate Company model for this scale |
+
+---
+
+## Author
+
+Built as a full-stack portfolio project demonstrating REST API design, role-based access, async task queues, and cross-platform mobile development.
+
+**Stack:** Python · Django REST Framework · React 18 · React Native · Expo · PostgreSQL · Celery · Redis · JWT
