@@ -294,6 +294,61 @@ DEFAULT_FROM_EMAIL=your@gmail.com
 
 ---
 
+### Running with Docker
+
+The easiest way to run the backend — no need to install Python, PostgreSQL, or Redis locally.
+
+**Prerequisites**
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
+
+**1. Create a `.env` file in the project root:**
+```
+SECRET_KEY=your-secret-key
+DATABASE_URL=postgres://postgres:postgres@db:5432/careerstack
+REDIS_URL=redis://redis:6379/0
+DEFAULT_FROM_EMAIL=noreply@example.com
+EMAIL_HOST=smtp-relay.brevo.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=your@email.com
+EMAIL_HOST_PASSWORD=yourpassword
+```
+
+**2. Start all services:**
+```bash
+docker compose up --build
+```
+
+This starts four containers:
+- `db` — PostgreSQL database
+- `redis` — Redis broker
+- `web` — Django API on `http://localhost:8000`
+- `celery` — Background task worker
+
+Migrations and static file collection run automatically on startup.
+
+**3. Seed fake data (optional):**
+```bash
+docker compose exec web python manage.py seed_data
+```
+
+**4. Stop everything:**
+```bash
+docker compose down
+```
+
+To also delete the database volume:
+```bash
+docker compose down -v
+```
+
+| Service | URL |
+|---|---|
+| Django API | http://localhost:8000/api/ |
+| Swagger UI | http://localhost:8000/swagger/ |
+| Django Admin | http://localhost:8000/admin/ |
+
+---
+
 ### Web Frontend Setup
 
 ```bash
